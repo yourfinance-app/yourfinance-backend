@@ -5,10 +5,8 @@ from starlette.responses import Response
 
 import asyncpg
 from asyncpg.pool import Pool
-from sqlmodel import Session
-from sqlalchemy.future import Engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession, AsyncEngine, create_async_engine
 
 from .config import settings
 
@@ -46,7 +44,7 @@ class DatabaseConnectionPool(object):
 
 
 class DatabaseMiddleware(BaseHTTPMiddleware):
-    engines: dict[str, Engine] = dict()
+    engines: dict[str, AsyncEngine] = dict()
     temporary_engines = []
 
     def __init__(self, app: FastAPI):
@@ -59,9 +57,11 @@ class DatabaseMiddleware(BaseHTTPMiddleware):
         )
 
     async def dispatch_func(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
-        with Session(self.engines["main"]) as s:
-            request.state.session = s
-            response = await call_next(request)
+        session_maker = sessionmaker(self.engines["main"], class_=AsyncSession)
+        async with session_maker() as session:
+            async with session.begin():
+                request.state.session = session
+                response = await call_next(request)
 
         return response
 

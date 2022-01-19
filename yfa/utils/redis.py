@@ -5,7 +5,7 @@ import logging
 import aioredis
 import aioredis.sentinel
 from aioredis.exceptions import RedisError
-from app.config import settings
+from yfa.config import settings
 
 
 class RedisClient(object):
