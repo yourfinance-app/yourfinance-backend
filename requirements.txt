@@ -1,7 +1,9 @@
 fastapi==0.71.0
 uvicorn[standard]==0.16.0
+click==8.0.3
+python-dotenv==0.19.2
+aioredis==2.0.1
 asyncpg==0.25.0
 SQLAlchemy==1.4.29
-sqlmodel==0.0.6
-aioredis==2.0.1
 alembic==1.7.5
+sqlmodel==0.0.6

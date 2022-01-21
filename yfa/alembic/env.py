@@ -5,12 +5,10 @@ from sqlalchemy import pool
 
 from alembic import context
 
-# Import all the models defined in this app here
-from yfa.models import User  # noqa: F401
-
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
+config.set_main_option("sqlalchemy.url", "")
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

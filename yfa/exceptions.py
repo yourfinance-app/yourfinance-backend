@@ -1,0 +1,2 @@
+class YFAException(Exception):
+    pass

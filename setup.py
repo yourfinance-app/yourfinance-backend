@@ -13,5 +13,8 @@ setup(
     license='MIT',
     author='Fahim Ali Zain',
     author_email='fahimalizain@gmail.com',
-    description='YFA Backend'
+    description='YFA Backend',
+    entry_points={
+        "console_scripts": ["yfa = yfa.cli:entrypoint"]
+    }
 )

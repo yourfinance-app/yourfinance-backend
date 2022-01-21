@@ -1,10 +1,15 @@
 from pydantic import BaseSettings
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 class Settings(BaseSettings):
+    LOG_LEVEL: str = "DEBUG"
+
     PGSQL_HOST: str
     PGSQL_PORT: int
-    PGSQL_DB_MAIN: str
+    PGSQL_DB_CORE: str
     PGSQL_USER: str
     PGSQL_PWD: str
 
@@ -15,4 +20,4 @@ class Settings(BaseSettings):
     REDIS_USE_SENTINEL: bool = False
 
 
-settings = Settings()
+config = Settings()

@@ -8,7 +8,7 @@ from asyncpg.pool import Pool
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.asyncio import AsyncSession, AsyncEngine, create_async_engine
 
-from .config import settings
+from .config import config
 
 
 class DatabaseConnectionPool(object):
@@ -50,8 +50,8 @@ class DatabaseMiddleware(BaseHTTPMiddleware):
     def __init__(self, app: FastAPI):
         self.app = app
         self.engines["main"] = create_async_engine(
-            url=f"postgresql+asyncpg://{settings.PGSQL_USER}:{settings.REDIS_PWD}"
-            + f"@{settings.PGSQL_HOST}:{settings.PGSQL_PORT}/{settings.PGSQL_DB_MAIN}",
+            url=f"postgresql+asyncpg://{config.PGSQL_USER}:{config.REDIS_PWD}"
+            + f"@{config.PGSQL_HOST}:{config.PGSQL_PORT}/{config.PGSQL_DB_CORE}",
             future=True,
             echo=True,
         )

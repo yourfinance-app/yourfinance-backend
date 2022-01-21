@@ -5,7 +5,7 @@ import logging
 import aioredis
 import aioredis.sentinel
 from aioredis.exceptions import RedisError
-from yfa.config import settings
+from yfa.config import config
 
 
 class RedisClient(object):
@@ -23,7 +23,7 @@ class RedisClient(object):
     log: logging.Logger = logging.getLogger(__name__)
     base_redis_init_kwargs: dict = {
         "encoding": "utf-8",
-        "port": settings.REDIS_PORT,
+        "port": config.REDIS_PORT,
     }
     connection_kwargs: dict = {}
 
@@ -36,22 +36,22 @@ class RedisClient(object):
         """
         if cls.redis_client is None:
             cls.log.debug("Initialize Redis client.")
-            if settings.REDIS_USER and settings.REDIS_PWD:
+            if config.REDIS_USER and config.REDIS_PWD:
                 cls.connection_kwargs = {
-                    "username": settings.REDIS_USER,
-                    "password": settings.REDIS_PWD,
+                    "username": config.REDIS_USER,
+                    "password": config.REDIS_PWD,
                 }
 
-            if settings.REDIS_USE_SENTINEL:
+            if config.REDIS_USE_SENTINEL:
                 sentinel = aioredis.sentinel.Sentinel(
-                    [(settings.REDIS_HOST, settings.REDIS_PORT)],
+                    [(config.REDIS_HOST, config.REDIS_PORT)],
                     sentinel_kwargs=cls.connection_kwargs,
                 )
                 cls.redis_client = sentinel.master_for("mymaster")
             else:
                 cls.base_redis_init_kwargs.update(cls.connection_kwargs)
                 cls.redis_client = aioredis.from_url(
-                    "redis://{0:s}".format(settings.REDIS_HOST),
+                    "redis://{0:s}".format(config.REDIS_HOST),
                     **cls.base_redis_init_kwargs,
                 )
 
