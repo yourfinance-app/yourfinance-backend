@@ -20,8 +20,12 @@ def yfa_cli():
     allow_extra_args=True,
 ))
 @click.option("--db", type=click.Choice(["core", "user"]))
+@click.option("--user-id", required=False)
 @click.pass_context
-def alembic(ctx, db: str):
+def alembic(ctx, db: str, user_id: str = None):
+    if db == "user" and not user_id:
+        raise Exception("User ID is mandatory")
+
     print(f"Type: {db}")
     exec_args = [
         sys.executable,
@@ -31,7 +35,9 @@ def alembic(ctx, db: str):
         *ctx.args,
     ]
     print(" ".join(exec_args))
-    subprocess.run(exec_args)
+    subprocess.run(exec_args, env={
+        "USER_ID": user_id
+    })
 
 
 # @alembic.command()

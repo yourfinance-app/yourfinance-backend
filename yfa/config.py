@@ -42,5 +42,12 @@ def get_sqlalchemy_core_url():
     return url
 
 
-def get_sqlalchemy_user_url():
-    return None
+def get_sqlalchemy_user_url(user_id: str):
+    url = get_sqlalchemu_url(
+        driver="postgresql+asyncpg",
+        user=config.PGSQL_USER, pwd=config.PGSQL_PWD,
+        host=config.PGSQL_HOST, port=config.PGSQL_PORT,
+        db_name=user_id
+    )
+
+    return url
