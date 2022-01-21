@@ -5,7 +5,7 @@ with open('requirements.txt') as f:
     install_requires = f.read().strip().split('\n')
 
 setup(
-    name='YFA-App',
+    name='yfa',
     version='0.0.1',
     install_requires=install_requires,
     packages=find_packages(),
