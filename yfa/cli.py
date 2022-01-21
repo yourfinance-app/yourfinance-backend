@@ -35,9 +35,11 @@ def alembic(ctx, db: str, user_id: str = None):
         *ctx.args,
     ]
     print(" ".join(exec_args))
-    subprocess.run(exec_args, env={
-        "USER_ID": user_id
-    })
+
+    env = {}
+    if user_id:
+        env["USER_ID"] = user_id
+    subprocess.run(exec_args, env=env)
 
 
 # @alembic.command()
