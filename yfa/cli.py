@@ -1,4 +1,8 @@
+import os
+import sys
 import click
+import subprocess
+
 from yfa import __version__
 
 
@@ -6,30 +10,44 @@ from yfa import __version__
 @click.version_option(version=__version__)
 def yfa_cli():
     """Command-line interface to YFA."""
-    from .logging import configure_logging
+    from yfa.logging import configure_logging
 
     configure_logging()
 
 
-@yfa_cli.command()
-def migrate_core():
-    pass
+@yfa_cli.command(context_settings=dict(
+    ignore_unknown_options=True,
+    allow_extra_args=True,
+))
+@click.option("--db", type=click.Choice(["core", "user"]))
+@click.pass_context
+def alembic(ctx, db: str):
+    print(f"Type: {db}")
+    exec_args = [
+        sys.executable,
+        "-m", "alembic",
+        "--name", db,
+        "-c", os.path.join(os.path.dirname(__file__), "alembic.ini"),
+        *ctx.args,
+    ]
+    print(" ".join(exec_args))
+    subprocess.run(exec_args)
 
 
-@yfa_cli.command()
-def migrate_all_tenants():
-    pass
+# @alembic.command()
+# def migrate_all_tenants():
+#     pass
 
 
-@yfa_cli.command()
-@click.option("--user-id")
-def migrate_tenant(user_id):
-    pass
+# @alembic.command()
+# @click.option("--user-id")
+# def migrate_tenant(user_id):
+#     pass
 
 
 def entrypoint():
     """The entry that the CLI is executed from"""
-    from .exceptions import YFAException
+    from yfa.exceptions import YFAException
 
     try:
         yfa_cli()

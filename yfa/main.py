@@ -2,7 +2,7 @@ from fastapi import FastAPI
 
 from .config import config
 from .utils import RedisClient
-from .db import database_pool, DatabaseMiddleware
+from .database import DatabaseMiddleware
 from .api import auth
 from .models import *  # noqa
 
@@ -22,7 +22,6 @@ def get_app():
     )
     app.add_middleware(DatabaseMiddleware)
     app.state.config = config
-    app.state.db_pool = database_pool
 
     app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 
