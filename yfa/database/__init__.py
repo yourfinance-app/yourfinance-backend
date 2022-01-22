@@ -6,6 +6,7 @@ from starlette.responses import Response
 from sqlalchemy.orm import sessionmaker, registry
 from sqlalchemy.ext.asyncio import AsyncSession, AsyncEngine, create_async_engine
 
+import yfa
 from yfa.config import get_sqlalchemy_core_url
 
 
@@ -25,7 +26,7 @@ class DatabaseMiddleware(BaseHTTPMiddleware):
         session_maker = sessionmaker(self.engines["main"], class_=AsyncSession)
         async with session_maker() as session:
             async with session.begin():
-                request.state.session = session
+                yfa.session.set(session)
                 response = await call_next(request)
 
         return response
