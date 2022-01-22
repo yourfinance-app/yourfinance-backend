@@ -2,6 +2,7 @@ from fastapi import FastAPI
 
 from .config import config
 from .utils import RedisClient
+from .exceptions import YFAExceptionMiddleware
 from .database import DatabaseMiddleware
 from .api import auth
 from .models import *  # noqa
@@ -20,6 +21,7 @@ def get_app():
         on_startup=[on_startup],
         on_shutdown=[on_shutdown]
     )
+    app.add_middleware(YFAExceptionMiddleware)
     app.add_middleware(DatabaseMiddleware)
     app.state.config = config
 
