@@ -9,6 +9,7 @@ class YFAException(Exception):
     http_status_code = 500
     message = "Unknown Error"
     error_code = "UNKNOWN_ERROR"
+    data = dict()
 
     def as_dict(self):
         return dict(
@@ -26,12 +27,12 @@ class YFAExceptionMiddleware(BaseHTTPMiddleware):
 
         r = {
             "data": None,
-            "status": "SUCCESS",
+            "status": "OK",
             "errors": None
         }
         status_code = 200
         try:
-            r["data"] = await call_next(request)
+            response = await call_next(request)
         except YFAException as e:  # noqa
             r["status"] = "FAILED"
             r["errors"] = [
@@ -39,6 +40,10 @@ class YFAExceptionMiddleware(BaseHTTPMiddleware):
             ]
             status_code = e.http_status_code
 
+        if isinstance(response, Response):
+            return response
+
+        r["data"] = response
         response = JSONResponse(r)
         response.status_code = status_code
         return response
@@ -48,3 +53,18 @@ class NotFound(YFAException):
     http_status_code = 404
     message = "Requested Entity Not Found"
     error_code = "NOT_FOUND"
+
+
+class InvalidCountry(YFAException):
+    http_status_code = 400
+    message = "Invalid Country"
+    error_code = "INVALID_COUNTRY"
+
+
+class InvalidPassword(YFAException):
+    http_status_code = 400
+    message = "Invalid Password"
+    error_code = "INVALID_PASSWORD"
+
+    def __init__(self, result: dict) -> None:
+        self.data = result

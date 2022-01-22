@@ -7,3 +7,4 @@ asyncpg==0.25.0
 SQLAlchemy==1.4.29
 alembic==1.7.5
 sqlmodel==0.0.6
+iso3166==2.0.2                  # ISO-3166 Country List
