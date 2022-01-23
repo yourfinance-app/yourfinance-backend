@@ -2,8 +2,9 @@ from sqlmodel import select, func
 from pydantic import BaseModel
 
 import yfa
+from yfa.exceptions import DuplicateEntity
 from yfa.models import UserEmailSignupInput, User
-from yfa.utils.data import validate_country, validate_password, generate_random
+from yfa.utils.data import validate_country, validate_password, generate_random, hash_password
 
 
 class IdentityProviderSignup(BaseModel):
@@ -12,24 +13,25 @@ class IdentityProviderSignup(BaseModel):
 
 async def email_signup(data: UserEmailSignupInput):
 
-    # TODO: Validate Email
     # TODO: Validate Email OTP
-    validate_password(data.pwd, throw=True)
+    # TODO: Check Email used in ID-Provided User
+
     data.country = validate_country(data.country)
+    validate_password(data.pwd, throw=True)
     await validate_unique_email(data.email_id)
 
     user = User(
         first_name=data.first_name, last_name=data.last_name, country=data.country,
         email_id=data.email_id,
+        password_hash=hash_password(pwd=data.pwd),
+        db_name=f"yfa_{generate_random(15)}"
     )
-    user.db_name = f"yfa_{generate_random(15)}"
-    # TODO: Check Email used in ID-Provided User
-    # TODO: Create new DB
 
-    # Make the new User and save it in DB
+    db = yfa.session.get()
+    db.add(user)
+    # TODO: Create new DB Background Task
 
-    print(r)
-    return None
+    return user
 
 
 async def identity_provider_signup(data: IdentityProviderSignup):
@@ -40,5 +42,7 @@ async def validate_unique_email(email_id: str):
     db = yfa.session.get()
     r = await db.scalar(select([func.count()]).select_from(User).filter_by(email_id=email_id))
     if r > 0:
-        # TODO: Update Exception Class
-        raise Exception("Duplicate Email")
+        raise DuplicateEntity(
+            entity_type="email_id",
+            entity_value=email_id
+        )

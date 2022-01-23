@@ -1,4 +1,5 @@
 from sqlmodel import SQLModel, Field
+from pydantic import EmailStr
 
 
 class UserEmailLoginInput(SQLModel):
@@ -10,17 +11,15 @@ class UserBase(SQLModel):
     first_name: str
     last_name: str = None
     country: str
-    email_id: str = None
+    email_id: EmailStr = None
 
 
 class UserEmailSignupInput(UserBase):
-    email_id: str
+    email_id: EmailStr
     pwd: str
 
 
 class User(UserBase, table=True):
     id: int = Field(default=None, primary_key=True)
-    db_pwd: str = None
     password_hash: str = None
-    password_salt: str = None
     db_name: str = None

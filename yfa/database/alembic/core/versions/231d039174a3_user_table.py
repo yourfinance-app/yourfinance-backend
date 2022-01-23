@@ -30,12 +30,8 @@ def upgrade():
                         'email_id', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
                     sa.Column('password_hash',
                               sqlmodel.sql.sqltypes.AutoString(), nullable=True),
-                    sa.Column('password_salt',
-                              sqlmodel.sql.sqltypes.AutoString(), nullable=True),
                     sa.Column(
                         'db_name', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
-                    sa.Column(
-                        'db_pwd', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
                     sa.Column('id', sa.Integer(), nullable=True),
                     sa.PrimaryKeyConstraint('id')
                     )

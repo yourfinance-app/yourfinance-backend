@@ -44,6 +44,22 @@ def validate_password(pwd: str, throw=False):
     return result
 
 
+def hash_password(pwd: str):
+    import bcrypt
+    if not isinstance(pwd, bytes):
+        pwd = pwd.encode("utf-8")
+    return bcrypt.hashpw(
+        pwd, bcrypt.gensalt()
+    ).decode("utf-8")
+
+
+def verify_password(pwd: str, hash: str):
+    import bcrypt
+    return bcrypt.checkpw(
+        pwd.encode("utf-8"), hash.encode("utf-8")
+    )
+
+
 def generate_random(length: int):
     import random
     import string

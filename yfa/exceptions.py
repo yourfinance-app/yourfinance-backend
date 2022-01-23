@@ -1,3 +1,4 @@
+import traceback
 from fastapi import FastAPI, Request, Response
 from starlette.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
@@ -14,7 +15,8 @@ class YFAException(Exception):
     def as_dict(self):
         return dict(
             http_status_code=self.http_status_code,
-            message=self.message, error_code=self.error_code
+            message=self.message, error_code=self.error_code,
+            data=self.data or {}
         )
 
 
@@ -31,6 +33,7 @@ class YFAExceptionMiddleware(BaseHTTPMiddleware):
             "errors": None
         }
         status_code = 200
+        response = None
         try:
             response = await call_next(request)
         except YFAException as e:  # noqa
@@ -39,6 +42,12 @@ class YFAExceptionMiddleware(BaseHTTPMiddleware):
                 e.as_dict()
             ]
             status_code = e.http_status_code
+        except Exception as e:
+            status_code = 500
+            r["status"] = "FAILED"
+            r["errors"] = [
+                UnknownError(e).as_dict()
+            ]
 
         if isinstance(response, Response):
             return response
@@ -47,6 +56,17 @@ class YFAExceptionMiddleware(BaseHTTPMiddleware):
         response = JSONResponse(r)
         response.status_code = status_code
         return response
+
+
+class UnknownError(YFAException):
+    def __init__(self, e: Exception):
+        self.error_code = "UNKNOWN_ERROR"
+        self.http_status_code = 500
+        self.message = "Unknown Error"
+        self.data = dict(
+            traceback=''.join(traceback.format_tb(e.__traceback__)),
+            exc=str(e)
+        )
 
 
 class NotFound(YFAException):
@@ -68,3 +88,15 @@ class InvalidPassword(YFAException):
 
     def __init__(self, result: dict) -> None:
         self.data = result
+
+
+class DuplicateEntity(YFAException):
+    http_status_code = 409
+    message = "Duplicate Entity"
+    error_code = "DUPLICATE_ENTITY"
+
+    def __init__(self, entity_type: str, entity_value: str) -> None:
+        self.data = dict(
+            entity_type=entity_type,
+            entity_value=entity_value
+        )
