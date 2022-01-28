@@ -31,7 +31,7 @@ async def email_signup(data: UserEmailSignupInput):
     db.add(user)
     # TODO: Create new DB Background Task
 
-    return user
+    return user.get_user_base()
 
 
 async def identity_provider_signup(data: IdentityProviderSignup):

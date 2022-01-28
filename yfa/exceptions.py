@@ -86,7 +86,7 @@ class InvalidPassword(YFAException):
     message = "Invalid Password"
     error_code = "INVALID_PASSWORD"
 
-    def __init__(self, result: dict) -> None:
+    def __init__(self, result: dict = None) -> None:
         self.data = result
 
 
