@@ -13,11 +13,11 @@ from yfa.database import user_registry
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
-user_id = os.environ["USER_ID"]
-if not user_id:
-    raise Exception("Please pass USER_ID for alembic operations")
+db_name = config.get_main_option("DB_NAME") or os.environ["DB_NAME"]
+if not db_name:
+    raise Exception("Please pass DB_NAME for alembic operations")
 else:
-    print("User ID:", user_id)
+    print("DB_NAME:", db_name)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
@@ -47,7 +47,7 @@ def run_migrations_offline():
     script output.
 
     """
-    url = get_sqlalchemy_user_url(user_id)
+    url = get_sqlalchemy_user_url(db_name)
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -73,7 +73,7 @@ async def run_migrations_online():
     and associate a connection with the context.
 
     """
-    connectable = create_async_engine(get_sqlalchemy_user_url(user_id))
+    connectable = create_async_engine(get_sqlalchemy_user_url(db_name))
 
     async with connectable.connect() as connection:
         await connection.run_sync(do_run_migrations)

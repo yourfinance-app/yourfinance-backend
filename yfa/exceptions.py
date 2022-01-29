@@ -1,9 +1,4 @@
 import traceback
-from fastapi import FastAPI, Request, Response
-from starlette.responses import JSONResponse
-from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
-
-import yfa
 
 
 class YFAException(Exception):
@@ -18,44 +13,6 @@ class YFAException(Exception):
             message=self.message, error_code=self.error_code,
             data=self.data or {}
         )
-
-
-class YFAExceptionMiddleware(BaseHTTPMiddleware):
-    def __init__(self, app: FastAPI):
-        self.app = app
-
-    async def dispatch_func(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
-        yfa.request.set(request)
-
-        r = {
-            "data": None,
-            "status": "OK",
-            "errors": None
-        }
-        status_code = 200
-        response = None
-        try:
-            response = await call_next(request)
-        except YFAException as e:  # noqa
-            r["status"] = "FAILED"
-            r["errors"] = [
-                e.as_dict()
-            ]
-            status_code = e.http_status_code
-        except Exception as e:
-            status_code = 500
-            r["status"] = "FAILED"
-            r["errors"] = [
-                UnknownError(e).as_dict()
-            ]
-
-        if isinstance(response, Response):
-            return response
-
-        r["data"] = response
-        response = JSONResponse(r)
-        response.status_code = status_code
-        return response
 
 
 class UnknownError(YFAException):

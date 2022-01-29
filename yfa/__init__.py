@@ -1,4 +1,5 @@
 from contextvars import ContextVar
+from starlette.background import BackgroundTasks
 from starlette.requests import Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -13,3 +14,5 @@ __version__ = VERSION
 request: ContextVar[Request] = ContextVar("starlette-request", default=None)
 session: ContextVar[AsyncSession] = \
     ContextVar("active-db-session", default=None)
+background_tasks: ContextVar[BackgroundTasks] = \
+    ContextVar("background-tasks", default=None)

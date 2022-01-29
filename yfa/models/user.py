@@ -27,4 +27,4 @@ class User(UserBase, table=True):
     db_name: str = None
 
     def get_user_base(self) -> UserBase:
-        return UserBase(**self.__dict__)
+        return UserBase(**self.__dict__).__dict__
