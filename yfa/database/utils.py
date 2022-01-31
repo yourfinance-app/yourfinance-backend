@@ -13,7 +13,7 @@ async def create_user_database(db_name: str):
     if not await database_exists(engine.url):
         await create_database(engine.url)
 
-    print("Created Database Exists: ", database_exists(engine.url))
+    print("Created Database Exists: ", await database_exists(engine.url))
 
     # Lets build an up-to-date db
     # https://alembic.sqlalchemy.org/en/latest/cookbook.html#building-an-up-to-date-database-from-scratch
@@ -146,31 +146,31 @@ async def create_database(url: URL | str, encoding='utf8', template=None):
         if not template:
             template = 'template1'
 
-        text = "CREATE DATABASE {0} ENCODING '{1}' TEMPLATE {2}".format(
-            quote(engine, database),
+        text = sa.text("CREATE DATABASE {0} ENCODING '{1}' TEMPLATE {2}".format(
+            quote(engine.sync_engine, database),
             encoding,
-            quote(engine, template)
-        )
+            quote(engine.sync_engine, template)
+        ))
 
         async with engine.connect() as connection:
             await connection.execute(text)
 
     elif dialect_name == 'mysql':
-        text = "CREATE DATABASE {0} CHARACTER SET = '{1}'".format(
-            quote(engine, database),
+        text = sa.text("CREATE DATABASE {0} CHARACTER SET = '{1}'".format(
+            quote(engine.sync_engine, database),
             encoding
-        )
+        ))
         async with engine.connect() as connection:
             await connection.execute(text)
 
     elif dialect_name == 'sqlite' and database != ':memory:':
         if database:
             async with engine.connect() as connection:
-                await connection.execute("CREATE TABLE DB(id int);")
-                await connection.execute("DROP TABLE DB;")
+                await connection.execute(sa.text("CREATE TABLE DB(id int);"))
+                await connection.execute(sa.text("DROP TABLE DB;"))
 
     else:
-        text = 'CREATE DATABASE {0}'.format(quote(engine, database))
+        text = sa.text('CREATE DATABASE {0}'.format(quote(engine.sync_engine, database)))
         async with engine.connect() as connection:
             await connection.execute(text)
 
