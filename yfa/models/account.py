@@ -1,4 +1,3 @@
-from sqlalchemy import table
 from sqlmodel import SQLModel, Field
 
 from yfa.database import user_registry

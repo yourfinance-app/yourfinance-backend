@@ -28,6 +28,7 @@ class DatabaseMiddleware(BaseHTTPMiddleware):
             async with session.begin():
                 yfa.session.set(session)
                 response = await call_next(request)
+                await session.commit()
 
         return response
 

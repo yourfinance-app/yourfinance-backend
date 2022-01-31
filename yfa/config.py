@@ -24,7 +24,7 @@ class Settings(BaseSettings):
 config = Settings()
 
 
-def get_sqlalchemu_url(driver, user, pwd, host, port, db_name):
+def get_sqlalchemy_url(driver, user, pwd, host, port, db_name):
     """
     driver://user:pass@localhost:port/dbname
     """
@@ -32,7 +32,7 @@ def get_sqlalchemu_url(driver, user, pwd, host, port, db_name):
 
 
 def get_sqlalchemy_core_url():
-    url = get_sqlalchemu_url(
+    url = get_sqlalchemy_url(
         driver="postgresql+asyncpg",
         user=config.PGSQL_USER, pwd=config.PGSQL_PWD,
         host=config.PGSQL_HOST, port=config.PGSQL_PORT,
@@ -42,12 +42,12 @@ def get_sqlalchemy_core_url():
     return url
 
 
-def get_sqlalchemy_user_url(user_id: str):
-    url = get_sqlalchemu_url(
+def get_sqlalchemy_user_url(db_name: str):
+    url = get_sqlalchemy_url(
         driver="postgresql+asyncpg",
         user=config.PGSQL_USER, pwd=config.PGSQL_PWD,
         host=config.PGSQL_HOST, port=config.PGSQL_PORT,
-        db_name=user_id
+        db_name=db_name
     )
 
     return url
