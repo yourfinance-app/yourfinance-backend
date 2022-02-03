@@ -1,19 +1,24 @@
 import uuid
+from typing import List
+from sqlmodel import select
 
 import yfa
+from yfa.exceptions import NotFound
 from yfa.models.account_group import AccountGroupBase, AccountGroup
-from typing import List
 
 
-def get(id: uuid.UUID) -> AccountGroup:
-    pass
+async def get_single(id: uuid.UUID) -> AccountGroup:
+    locals = yfa.locals.get()
+    return await locals.db.get(AccountGroup, id)
 
 
-def get_all() -> List[AccountGroup]:
-    pass
+async def get_all() -> List[AccountGroup]:
+    locals = yfa.locals.get()
+    result = await locals.db.scalars(select(AccountGroup))
+    return result.all()
 
 
-def create(account_group: AccountGroupBase) -> AccountGroup:
+async def create(account_group: AccountGroupBase) -> AccountGroup:
     locals = yfa.locals.get()
 
     account_group = AccountGroup(**account_group.__dict__)
@@ -22,9 +27,26 @@ def create(account_group: AccountGroupBase) -> AccountGroup:
     return account_group
 
 
-def update(id: uuid.UUID, group: AccountGroupBase) -> AccountGroup:
-    pass
+async def update(id: uuid.UUID, account_group: AccountGroupBase) -> AccountGroup:
+    locals = yfa.locals.get()
+
+    _account_group = await get_single(id)
+    if not _account_group:
+        raise NotFound()
+    _account_group.title = account_group.title
+    locals.db.add(_account_group)
+    await locals.db.flush()
+    await locals.db.refresh(_account_group)
+
+    return _account_group
 
 
-def delete(id: uuid.UUID) -> bool:
-    pass
+async def delete(id: uuid.UUID) -> bool:
+    locals = yfa.locals.get()
+
+    account_group = await get_single(id)
+    if not account_group:
+        raise NotFound()
+    await locals.db.delete(account_group)
+
+    return True
