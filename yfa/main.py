@@ -8,8 +8,8 @@ from .exceptions import YFAException, UnknownError
 from .config import config
 from .utils import RedisClient
 from .database import DatabaseMiddleware
-from .api import auth
 from .models import *  # noqa
+from .api import router as api_router
 
 
 async def on_startup():
@@ -29,7 +29,7 @@ def get_app():
     app.add_middleware(YFAMiddleware)
     app.state.config = config
 
-    app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
+    app.include_router(api_router)
 
     @app.get("/")
     def root():
