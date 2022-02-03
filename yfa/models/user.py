@@ -1,3 +1,4 @@
+import uuid
 from sqlmodel import SQLModel, Field
 from pydantic import EmailStr
 
@@ -22,9 +23,12 @@ class UserEmailSignupInput(UserBase):
 class User(UserBase, table=True):
     __tablename__ = "yfa_user"
 
-    id: int = Field(default=None, primary_key=True)
+    id: uuid.UUID = Field(
+        default_factory=uuid.uuid4,
+        primary_key=True, nullable=False,
+    )
     password_hash: str = None
-    db_name: str = None
+    db_name: str
 
     def get_user_base(self) -> UserBase:
         return UserBase(**self.__dict__).__dict__
