@@ -3,16 +3,16 @@ from sqlmodel import SQLModel, Field
 from pydantic import EmailStr
 
 
-class UserEmailLoginInput(SQLModel):
-    email_id: EmailStr
-    pwd: str
-
-
 class UserBase(SQLModel):
     first_name: str
     last_name: str = None
     country: str
     email_id: EmailStr = None
+
+
+class UserJWTContent(UserBase):
+    id: uuid.UUID
+    db_name: str
 
 
 class UserEmailSignupInput(UserBase):
@@ -32,3 +32,14 @@ class User(UserBase, table=True):
 
     def get_user_base(self) -> UserBase:
         return UserBase(**self.__dict__).__dict__
+
+
+# LOGIN
+
+class UserEmailLoginInput(SQLModel):
+    email_id: EmailStr
+    pwd: str
+
+
+class UserLoginResponse(UserBase):
+    jwt_token: str

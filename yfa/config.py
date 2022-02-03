@@ -7,6 +7,7 @@ load_dotenv()
 
 class Settings(BaseSettings):
     LOG_LEVEL: str = "DEBUG"
+    JWT_SECRET: str = "SECRET"
 
     PGSQL_HOST: str
     PGSQL_PORT: int

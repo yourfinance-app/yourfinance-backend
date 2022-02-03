@@ -14,10 +14,10 @@ def get_all() -> List[AccountGroup]:
 
 
 def create(account_group: AccountGroupBase) -> AccountGroup:
-    db = yfa.session.get()
+    locals = yfa.locals.get()
 
     account_group = AccountGroup(**account_group.__dict__)
-    db.add(account_group)
+    locals.db.add(account_group)
 
     return account_group
 

@@ -10,6 +10,7 @@ from .utils import RedisClient
 from .database import DatabaseMiddleware
 from .models import *  # noqa
 from .api import router as api_router
+from .controllers.auth.jwt import decode_token
 
 
 async def on_startup():
@@ -43,8 +44,11 @@ class YFAMiddleware(BaseHTTPMiddleware):
         self.app = app
 
     async def dispatch_func(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
-        request_token = yfa.request.set(request)
-        background_task_token = yfa.background_tasks.set(BackgroundTasks())
+        locals = yfa.Locals()
+        locals.request = request
+        locals.background_tasks = BackgroundTasks()
+
+        locals_token = yfa.locals.set(locals)
 
         r = {
             "data": None,
@@ -54,6 +58,9 @@ class YFAMiddleware(BaseHTTPMiddleware):
         status_code = 200
         response = None
         try:
+            if "Authorization" in request.headers:
+                locals.current_user = decode_token(request.headers.get(
+                    "Authorization").split(" ")[1])
             response = await call_next(request)
         except YFAException as e:  # noqa
             r["status"] = "FAILED"
@@ -68,17 +75,14 @@ class YFAMiddleware(BaseHTTPMiddleware):
                 UnknownError(e).as_dict()
             ]
 
-        background_tasks = yfa.background_tasks.get()
-
-        yfa.request.reset(request_token)
-        yfa.background_tasks.reset(background_task_token)
+        yfa.locals.reset(locals_token)
 
         if isinstance(response, Response):
-            response.background = background_tasks
+            response.background = locals.background_tasks
             return response
 
         r["data"] = response
-        response = JSONResponse(r, background=background_tasks)
+        response = JSONResponse(r, background=locals.background_tasks)
         response.status_code = status_code
         return response
 
