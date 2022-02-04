@@ -27,12 +27,11 @@ async def email_signup(data: UserEmailSignupInput):
         db_name=f"yfa_{generate_random(15)}"
     )
 
-    locals = yfa.locals
-    locals.db.add(user)
+    yfa.db.add(user)
 
     # Create a Background Task to make User DB
     from yfa.database.utils import create_user_database
-    locals.background_tasks.add_task(
+    yfa.background_tasks.add_task(
         create_user_database, db_name=user.db_name)
 
     return user.get_user_base()
@@ -43,8 +42,7 @@ async def identity_provider_signup(data: IdentityProviderSignup):
 
 
 async def validate_unique_email(email_id: str):
-    locals = yfa.locals
-    r = await locals.db.scalar(
+    r = await yfa.db.scalar(
         select([func.count()]).select_from(User).filter_by(email_id=email_id))
     if r > 0:
         raise DuplicateEntity(

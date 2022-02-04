@@ -15,7 +15,7 @@ async def get_many() -> List[AccountGroup]:
 
 @router.get("/{id}/v1")
 async def get_single(id: uuid.UUID):
-    return await account_group_controllers.get(id=id)
+    return await account_group_controllers.get_single(id=id)
 
 
 @router.post("/v1")

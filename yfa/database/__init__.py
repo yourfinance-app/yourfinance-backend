@@ -34,19 +34,18 @@ class DatabaseMiddleware(BaseHTTPMiddleware):
             return self.engines[db_name]
 
     async def dispatch_func(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
-        locals = yfa.locals
-        if locals.current_user:
-            engine = self.get_user_engine(locals.current_user.db_name)
+        if yfa.locals.current_user:
+            engine = self.get_user_engine(yfa.locals.current_user.db_name)
         else:
             engine = self.engines["main"]
 
         session_maker = sessionmaker(engine, class_=AsyncSession)
         async with session_maker() as session:
             async with session.begin():
-                locals.db = session
+                yfa.locals.db = session
                 response = await call_next(request)
                 await session.commit()
-                del locals.db
+                del yfa.locals.db
 
         return response
 

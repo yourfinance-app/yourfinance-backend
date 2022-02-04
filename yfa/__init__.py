@@ -16,16 +16,6 @@ __version__ = VERSION
 T = TypeVar("T")
 
 
-class ContextVarSimple(Generic[T]):
-    ctx = None
-
-    def __init__(self, name, default=None):
-        self.ctx = ContextVar(name=name, default=default)
-
-    def __getattr__(self, name: str) -> T:
-        return getattr(self.ctx.get(), name)
-
-
 class Locals:
     _request: ContextVar[Request] = ContextVar("request", default=None)
     _request_token: Token[Request]
@@ -102,6 +92,9 @@ class Locals:
             return
         self._current_user.reset(self._current_user_token)
 
+    def get_local(self, name: str, type: Generic[T]) -> T:
+        return getattr(name)
+
     def init_request(self, request: Request):
         self.request = request
         self.background_tasks = BackgroundTasks()
@@ -117,3 +110,15 @@ class Locals:
 
 
 locals = Locals()
+request: Request
+db: AsyncSession
+background_tasks: BackgroundTasks
+current_user: UserJWTContent
+
+
+def __getattr__(name: str):
+    global locals
+    if name in ["request", "db", "background_tasks", "current_user"]:
+        return getattr(locals, name)
+
+    return globals()[name]
