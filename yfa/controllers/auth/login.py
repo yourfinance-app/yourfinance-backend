@@ -7,7 +7,7 @@ from yfa.exceptions import NotFound, InvalidPassword
 
 
 async def email_login(input: UserEmailLoginInput):
-    locals = yfa.locals.get()
+    locals = yfa.locals
     stmt = select(User).filter_by(email_id=input.email_id).limit(1)
     user: User = await locals.db.scalar(stmt)
 

@@ -27,7 +27,7 @@ async def email_signup(data: UserEmailSignupInput):
         db_name=f"yfa_{generate_random(15)}"
     )
 
-    locals = yfa.locals.get()
+    locals = yfa.locals
     locals.db.add(user)
 
     # Create a Background Task to make User DB
@@ -43,7 +43,7 @@ async def identity_provider_signup(data: IdentityProviderSignup):
 
 
 async def validate_unique_email(email_id: str):
-    locals = yfa.locals.get()
+    locals = yfa.locals
     r = await locals.db.scalar(
         select([func.count()]).select_from(User).filter_by(email_id=email_id))
     if r > 0:

@@ -34,7 +34,7 @@ class DatabaseMiddleware(BaseHTTPMiddleware):
             return self.engines[db_name]
 
     async def dispatch_func(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
-        locals = yfa.locals.get()
+        locals = yfa.locals
         if locals.current_user:
             engine = self.get_user_engine(locals.current_user.db_name)
         else:
@@ -46,6 +46,7 @@ class DatabaseMiddleware(BaseHTTPMiddleware):
                 locals.db = session
                 response = await call_next(request)
                 await session.commit()
+                del locals.db
 
         return response
 

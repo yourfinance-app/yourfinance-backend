@@ -1,6 +1,5 @@
 from fastapi import FastAPI, Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
-from starlette.background import BackgroundTasks
 from starlette.responses import JSONResponse
 
 import yfa
@@ -44,12 +43,7 @@ class YFAMiddleware(BaseHTTPMiddleware):
         self.app = app
 
     async def dispatch_func(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
-        locals = yfa.Locals()
-        locals.request = request
-        locals.background_tasks = BackgroundTasks()
-
-        locals_token = yfa.locals.set(locals)
-
+        yfa.locals.init_request(request=request)
         r = {
             "data": None,
             "status": "OK",
@@ -59,7 +53,7 @@ class YFAMiddleware(BaseHTTPMiddleware):
         response = None
         try:
             if "Authorization" in request.headers:
-                locals.current_user = decode_token(request.headers.get(
+                yfa.locals.current_user = decode_token(request.headers.get(
                     "Authorization").split(" ")[1])
             response = await call_next(request)
         except YFAException as e:  # noqa
@@ -75,14 +69,15 @@ class YFAMiddleware(BaseHTTPMiddleware):
                 UnknownError(e).as_dict()
             ]
 
-        yfa.locals.reset(locals_token)
+        background_tasks = yfa.locals.background_tasks
+        yfa.locals.release_local()
 
         if isinstance(response, Response):
-            response.background = locals.background_tasks
+            response.background = background_tasks
             return response
 
         r["data"] = response
-        response = JSONResponse(r, background=locals.background_tasks)
+        response = JSONResponse(r, background=background_tasks)
         response.status_code = status_code
         return response
 
