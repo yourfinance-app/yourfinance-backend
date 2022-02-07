@@ -2,6 +2,7 @@ import os
 import sys
 import click
 import subprocess
+import asyncio
 
 from yfa import __version__
 
@@ -42,15 +43,12 @@ def alembic(ctx, db: str, db_name: str = None):
     subprocess.run(exec_args, env=env)
 
 
-# @alembic.command()
-# def migrate_all_tenants():
-#     pass
-
-
-# @alembic.command()
-# @click.option("--user-id")
-# def migrate_tenant(user_id):
-#     pass
+@yfa_cli.command()
+def make_core_db():
+    if not click.confirm("This will reset the CoreDB. Do you want to Continue ?"):
+        return
+    from yfa.database.utils.core_db import make_core_db as _make_core_db
+    asyncio.run(_make_core_db())
 
 
 def entrypoint():

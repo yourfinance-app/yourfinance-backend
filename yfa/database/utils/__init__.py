@@ -5,6 +5,7 @@ from sqlalchemy.exc import OperationalError, ProgrammingError
 from sqlalchemy.orm.session import object_session
 from sqlalchemy.orm.exc import UnmappedInstanceError
 
+import yfa
 from yfa.config import get_sqlalchemy_user_url
 
 
@@ -26,10 +27,10 @@ async def create_user_database(db_name: str):
     from alembic.config import Config
     from alembic import command
 
-    dirname = os.path.dirname(__file__)
+    dirname = os.path.dirname(yfa.__file__)
     # ini_section refers to alembic main section within ini file
     alembic_cfg = Config(os.path.join(
-        dirname, "../alembic.ini"), ini_section="user")
+        dirname, "alembic.ini"), ini_section="user")
     alembic_cfg.set_main_option("DB_NAME", db_name)
     command.stamp(alembic_cfg, "head")
 
