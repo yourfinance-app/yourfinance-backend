@@ -5,35 +5,6 @@ from sqlalchemy.exc import OperationalError, ProgrammingError
 from sqlalchemy.orm.session import object_session
 from sqlalchemy.orm.exc import UnmappedInstanceError
 
-import yfa
-from yfa.config import get_sqlalchemy_user_url
-
-
-async def create_user_database(db_name: str):
-    engine = create_async_engine(get_sqlalchemy_user_url(db_name=db_name))
-    if not await database_exists(engine.url):
-        await create_database(engine.url)
-
-    print("Created Database Exists: ", await database_exists(engine.url))
-
-    # Lets build an up-to-date db
-    # https://alembic.sqlalchemy.org/en/latest/cookbook.html#building-an-up-to-date-database-from-scratch
-    from yfa.database import user_registry
-    async with engine.begin() as conn:
-        await conn.run_sync(user_registry.metadata.create_all)
-
-    # Update Alembic's stamp
-    import os
-    from alembic.config import Config
-    from alembic import command
-
-    dirname = os.path.dirname(yfa.__file__)
-    # ini_section refers to alembic main section within ini file
-    alembic_cfg = Config(os.path.join(
-        dirname, "alembic.ini"), ini_section="user")
-    alembic_cfg.set_main_option("DB_NAME", db_name)
-    command.stamp(alembic_cfg, "head")
-
 
 async def database_exists(url: str) -> bool:
     """Check if a database exists.
@@ -171,7 +142,76 @@ async def create_database(url: URL | str, encoding='utf8', template=None):
                 await connection.execute(sa.text("DROP TABLE DB;"))
 
     else:
-        text = sa.text('CREATE DATABASE {0}'.format(quote(engine.sync_engine, database)))
+        text = sa.text('CREATE DATABASE {0}'.format(
+            quote(engine.sync_engine, database)))
+        async with engine.connect() as connection:
+            await connection.execute(text)
+
+    await engine.dispose()
+
+
+async def drop_database(url: URL | str):
+    """Issue the appropriate DROP DATABASE statement.
+
+    :param url: A SQLAlchemy engine URL.
+
+    To drop a database, you can pass a simple URL that would have
+    been passed to ``create_async_engine``. ::
+
+        create_database('postgresql://postgres@localhost/name')
+
+    You may also pass the url from an existing engine. ::
+
+        create_database(engine.url)
+
+    Has full support for mysql, postgres, and sqlite. In theory,
+    other database engines should be supported.
+    """
+
+    url = make_url(url)
+    database = url.database
+    dialect_name = url.get_dialect().name
+    dialect_driver = url.get_dialect().driver
+
+    if dialect_name == 'postgresql':
+        url = _set_url_database(url, database="postgres")
+    elif dialect_name == 'mssql':
+        url = _set_url_database(url, database="master")
+    elif not dialect_name == 'sqlite':
+        url = _set_url_database(url, database=None)
+
+    if (dialect_name == 'mssql' and dialect_driver in {'pymssql', 'pyodbc'}) \
+            or (dialect_name == 'postgresql' and dialect_driver in {
+            'asyncpg', 'pg8000', 'psycopg2', 'psycopg2cffi'}):
+        engine = create_async_engine(url, isolation_level='AUTOCOMMIT')
+    else:
+        engine = create_async_engine(url)
+
+    if dialect_name == 'postgresql':
+
+        text = sa.text("DROP DATABASE {0}".format(
+            quote(engine.sync_engine, database),
+        ))
+
+        async with engine.connect() as connection:
+            await connection.execute(text)
+
+    elif dialect_name == 'mysql':
+        text = sa.text("DROP DATABASE {0}".format(
+            quote(engine.sync_engine, database)
+        ))
+        async with engine.connect() as connection:
+            await connection.execute(text)
+
+    elif dialect_name == 'sqlite' and database != ':memory:':
+        # if database:
+        #     async with engine.connect() as connection:
+        #         await connection.execute(sa.text("CREATE TABLE DB(id int);"))
+        #         await connection.execute(sa.text("DROP TABLE DB;"))
+        pass
+    else:
+        text = sa.text('DROP DATABASE {0}'.format(
+            quote(engine.sync_engine, database)))
         async with engine.connect() as connection:
             await connection.execute(text)
 

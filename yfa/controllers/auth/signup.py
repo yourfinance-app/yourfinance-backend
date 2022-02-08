@@ -30,7 +30,7 @@ async def email_signup(data: UserEmailSignupInput):
     yfa.db.add(user)
 
     # Create a Background Task to make User DB
-    from yfa.database.utils import create_user_database
+    from yfa.database.utils.user_db import create_user_database
     yfa.background_tasks.add_task(
         create_user_database, db_name=user.db_name)
 
