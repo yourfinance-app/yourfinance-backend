@@ -150,6 +150,74 @@ async def create_database(url: URL | str, encoding='utf8', template=None):
     await engine.dispose()
 
 
+async def drop_database(url: URL | str):
+    """Issue the appropriate DROP DATABASE statement.
+
+    :param url: A SQLAlchemy engine URL.
+
+    To drop a database, you can pass a simple URL that would have
+    been passed to ``create_async_engine``. ::
+
+        create_database('postgresql://postgres@localhost/name')
+
+    You may also pass the url from an existing engine. ::
+
+        create_database(engine.url)
+
+    Has full support for mysql, postgres, and sqlite. In theory,
+    other database engines should be supported.
+    """
+
+    url = make_url(url)
+    database = url.database
+    dialect_name = url.get_dialect().name
+    dialect_driver = url.get_dialect().driver
+
+    if dialect_name == 'postgresql':
+        url = _set_url_database(url, database="postgres")
+    elif dialect_name == 'mssql':
+        url = _set_url_database(url, database="master")
+    elif not dialect_name == 'sqlite':
+        url = _set_url_database(url, database=None)
+
+    if (dialect_name == 'mssql' and dialect_driver in {'pymssql', 'pyodbc'}) \
+            or (dialect_name == 'postgresql' and dialect_driver in {
+            'asyncpg', 'pg8000', 'psycopg2', 'psycopg2cffi'}):
+        engine = create_async_engine(url, isolation_level='AUTOCOMMIT')
+    else:
+        engine = create_async_engine(url)
+
+    if dialect_name == 'postgresql':
+
+        text = sa.text("DROP DATABASE {0}".format(
+            quote(engine.sync_engine, database),
+        ))
+
+        async with engine.connect() as connection:
+            await connection.execute(text)
+
+    elif dialect_name == 'mysql':
+        text = sa.text("DROP DATABASE {0}".format(
+            quote(engine.sync_engine, database)
+        ))
+        async with engine.connect() as connection:
+            await connection.execute(text)
+
+    elif dialect_name == 'sqlite' and database != ':memory:':
+        # if database:
+        #     async with engine.connect() as connection:
+        #         await connection.execute(sa.text("CREATE TABLE DB(id int);"))
+        #         await connection.execute(sa.text("DROP TABLE DB;"))
+        pass
+    else:
+        text = sa.text('DROP DATABASE {0}'.format(
+            quote(engine.sync_engine, database)))
+        async with engine.connect() as connection:
+            await connection.execute(text)
+
+    await engine.dispose()
+
+
 def _set_url_database(url: sa.engine.url.URL, database):
     """Set the database of an engine URL.
 

@@ -55,7 +55,7 @@ def make_core_db():
 @click.argument("user_id")
 def drop_user(user_id: str):
     import uuid
-    from yfa.database.utils import drop_user as _drop_user
+    from yfa.database.utils.core_db import drop_user as _drop_user
     asyncio.run(_drop_user(uuid.UUID(user_id)))
 
 
