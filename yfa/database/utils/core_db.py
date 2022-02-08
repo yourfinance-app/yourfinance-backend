@@ -1,11 +1,15 @@
-import sqlalchemy.ext.asyncio as sa
+import uuid
+import sqlalchemy as sa
+import sqlalchemy.ext.asyncio as sa_io
 from sqlmodel import SQLModel
+from sqlalchemy import select
 
 from yfa.config import get_sqlalchemy_core_url
+from yfa.models import User
 
 
 async def make_core_db():
-    engine = sa.create_async_engine(get_sqlalchemy_core_url())
+    engine = sa_io.create_async_engine(get_sqlalchemy_core_url())
     metadata = SQLModel.metadata
 
     async with engine.begin() as conn:
@@ -13,3 +17,10 @@ async def make_core_db():
         await conn.run_sync(metadata.create_all)
 
     print("CoreDB Reset")
+
+
+async def drop_user(id: uuid.UUID):
+    engine = sa_io.create_async_engine(get_sqlalchemy_core_url())
+    stmt = sa.select(User).filter_by(id=id).limit(1)
+    async with engine.begin() as conn:
+        conn.

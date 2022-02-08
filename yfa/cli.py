@@ -51,6 +51,14 @@ def make_core_db():
     asyncio.run(_make_core_db())
 
 
+@yfa_cli.command()
+@click.argument("user_id")
+def drop_user(user_id: str):
+    import uuid
+    from yfa.database.utils import drop_user as _drop_user
+    asyncio.run(_drop_user(uuid.UUID(user_id)))
+
+
 def entrypoint():
     """The entry that the CLI is executed from"""
     from yfa.exceptions import YFAException
